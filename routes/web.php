@@ -9,19 +9,28 @@ Route::get('/', function () {
 });
 
 Route::middleware(['auth', 'verified'])->group(function () {
+    // Dashboard Utama
     Route::get('/dashboard', [AspirasiController::class, 'index'])->name('dashboard');
 
-    // Rute Siswa
-    Route::post('/aspirasi/store', [AspirasiController::class, 'store'])
-        ->name('aspirasi.store')
-        ->middleware('role:student');
+    // ================= RUTE KHUSUS SISWA (STUDENT) =================
+    Route::middleware('role:student')->group(function () {
+        Route::post('/aspirasi/store', [AspirasiController::class, 'store'])->name('aspirasi.store');
+        // PASTIKAN BARIS INI ADA:
+        Route::delete('/aspirasi/destroy/{id}', [AspirasiController::class, 'destroy'])->name('aspirasi.destroy');
+    });
 
-    // Rute Admin
-    Route::post('/aspirasi/update/{id}', [AspirasiController::class, 'update'])
-        ->name('aspirasi.update')
-        ->middleware('role:admin');
+    // ================= RUTE KHUSUS ADMIN =================
+    Route::middleware('role:admin')->group(function () {
+        Route::post('/aspirasi/update/{id}', [AspirasiController::class, 'update'])->name('aspirasi.update');
+        
+        // Fitur Arsip Admin
+        Route::get('/aspirasi/archived', [AspirasiController::class, 'archivedPage'])->name('aspirasi.archived');
+        Route::post('/aspirasi/archive/{id}', [AspirasiController::class, 'archive'])->name('aspirasi.archive');
+        Route::post('/aspirasi/restore/{id}', [AspirasiController::class, 'restore'])->name('aspirasi.restore');
+    });
 });
 
+// Rute Profil
 Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');

@@ -14,22 +14,22 @@ class AspirasiController extends Controller
         $categories = Category::all();
 
         if (auth()->user()->role === 'admin') {
-            // Mulai query
-            $query = Complaint::with(['category', 'user', 'feedback']);
+            // Admin hanya melihat yang belum diarsipkan (is_archived = false)
+            $query = Complaint::with(['category', 'user', 'feedback'])
+                ->where('is_archived', false);
 
-            // Filter berdasarkan pencarian (Nama Siswa atau Lokasi)
             if ($request->has('search')) {
-                $query->whereHas('user', function ($q) use ($request) {
-                    $q->where('name', 'like', '%'.$request->search.'%');
-                })->orWhere('location', 'like', '%'.$request->search.'%');
+                $query->where(function($q) use ($request) {
+                    $q->whereHas('user', function ($u) use ($request) {
+                        $u->where('name', 'like', '%'.$request->search.'%');
+                    })->orWhere('location', 'like', '%'.$request->search.'%');
+                });
             }
 
-            // Filter berdasarkan Kategori
             if ($request->filled('category_id')) {
                 $query->where('category_id', $request->category_id);
             }
 
-            // Filter berdasarkan Status
             if ($request->filled('status')) {
                 $query->where('status', $request->status);
             }
@@ -39,7 +39,7 @@ class AspirasiController extends Controller
             return view('admin.dashboard', compact('aspirasis', 'categories'));
         }
 
-        // Logic Siswa tetap sama
+        // Logic Siswa: Hanya melihat miliknya sendiri
         $aspirasis = Complaint::with(['category', 'feedback'])
             ->where('user_id', auth()->id())
             ->latest()
@@ -50,14 +50,12 @@ class AspirasiController extends Controller
 
     public function store(Request $request)
     {
-        // Validasi input
         $request->validate([
             'category_id' => 'required|exists:categories,id',
             'location' => 'required|string|max:255',
             'description' => 'required|string',
         ]);
 
-        // Simpan ke database
         Complaint::create([
             'user_id' => auth()->id(),
             'category_id' => $request->category_id,
@@ -71,27 +69,68 @@ class AspirasiController extends Controller
 
     public function update(Request $request, $id)
     {
-        // Validasi
         $request->validate([
             'status' => 'required|in:pending,processing,done',
             'feedback' => 'required|string',
         ]);
 
-        // 1. Update Status di tabel Complaints
         $complaint = Complaint::findOrFail($id);
         $complaint->update([
             'status' => $request->status,
         ]);
 
-        // 2. Simpan atau Update Tanggapan di tabel Feedbacks
         Feedback::updateOrCreate(
-            ['complaint_id' => $id], // Cari berdasarkan ID laporan
+            ['complaint_id' => $id],
             [
-                'admin_id' => auth()->id(), // Admin yang login
+                'admin_id' => auth()->id(),
                 'content' => $request->feedback,
             ]
         );
 
         return redirect()->route('dashboard')->with('success', 'Status dan tanggapan berhasil diperbarui!');
+    }
+
+    /**
+     * Fitur Hapus untuk Siswa
+     */
+    public function destroy($id)
+    {
+        // Keamanan: Pastikan aspirasi milik user yang login dan sudah berstatus 'done'
+        $aspirasi = Complaint::where('user_id', auth()->id())
+            ->where('status', 'done')
+            ->findOrFail($id);
+
+        $aspirasi->delete();
+
+        return back()->with('success', 'Riwayat aspirasi berhasil dihapus!');
+    }
+
+    /**
+     * Fitur Arsip untuk Admin (Soft Delete Admin)
+     */
+    public function archive($id)
+    {
+        $complaint = Complaint::findOrFail($id);
+        $complaint->update(['is_archived' => true]);
+
+        return redirect()->route('dashboard')->with('success', 'Laporan berhasil diarsipkan.');
+    }
+
+    public function archivedPage()
+    {
+        $aspirasis = Complaint::with(['category', 'user', 'feedback'])
+            ->where('is_archived', true)
+            ->latest()
+            ->get();
+        
+        return view('admin.archived', compact('aspirasis'));
+    }
+
+    public function restore($id)
+    {
+        $complaint = Complaint::findOrFail($id);
+        $complaint->update(['is_archived' => false]);
+
+        return redirect()->route('aspirasi.archived')->with('success', 'Laporan berhasil dipulihkan.');
     }
 }
