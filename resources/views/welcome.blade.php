@@ -15,7 +15,7 @@
         }
 
         .bg-image {
-            background: url("{{ asset('Screenshot from 2026-04-02 08-29-49.png') }}") no-repeat center center/cover;
+            background: url("{{ asset('kuil.png') }}") no-repeat center center/cover;
             height: 100vh;
             position: relative;
         }

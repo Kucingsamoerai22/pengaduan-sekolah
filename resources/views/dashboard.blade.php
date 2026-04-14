@@ -1,96 +1,194 @@
 <x-app-layout>
     <x-slot name="header">
-        <h2 class="font-semibold text-xl text-gray-800 leading-tight">
-            {{ __('Dashboard Aspirasi Siswa') }}
+        <h2 class="text-2xl font-bold text-white tracking-wide">
+            🚀 Dashboard Aspirasi Siswa
         </h2>
     </x-slot>
 
-    <div class="py-12">
+    <style>
+        body {
+            background: radial-gradient(circle at top, #0f172a, #000) !important;
+            color: #fff;
+        }
+
+        /* GLASS CARD */
+        .glass {
+            background: rgba(255,255,255,0.05);
+            backdrop-filter: blur(18px);
+            border-radius: 18px;
+            border: 1px solid rgba(255,255,255,0.08);
+            box-shadow: 0 0 30px rgba(0,0,0,0.6);
+            transition: 0.3s;
+        }
+
+        .glass:hover {
+            transform: translateY(-4px);
+        }
+
+        /* INPUT, TEXTAREA, SELECT */
+        .glass input,
+        .glass textarea,
+        .glass select {
+            background: #1e293b; /* Warna solid gelap agar teks putih terbaca jelas */
+            border: 1px solid rgba(255,255,255,0.1);
+            color: white !important;
+            transition: 0.2s;
+        }
+
+        /* KHUSUS UNTUK DROPDOWN OPTIONS */
+        /* Supaya saat diklik list-nya tidak putih polos */
+        .glass select option {
+            background: #0f172a;
+            color: white;
+        }
+
+        .glass input::placeholder,
+        .glass textarea::placeholder {
+            color: #94a3b8;
+        }
+
+        .glass input:focus,
+        .glass textarea:focus,
+        .glass select:focus {
+            outline: none;
+            border: 1px solid #22c55e;
+            box-shadow: 0 0 10px #22c55e55;
+            background: #1e293b;
+        }
+
+        /* BUTTON */
+        .btn-kirim {
+            background: linear-gradient(45deg, #22c55e, #16a34a);
+            color: white;
+            font-weight: bold;
+            border-radius: 50px;
+            padding: 10px 24px;
+            transition: 0.3s;
+            border: none;
+            cursor: pointer;
+        }
+
+        .btn-kirim:hover {
+            transform: scale(1.07);
+            box-shadow: 0 0 15px #22c55e88;
+        }
+
+        /* TABLE */
+        table {
+            border-collapse: separate;
+            border-spacing: 0 8px;
+        }
+
+        thead {
+            background: transparent;
+        }
+
+        tbody tr {
+            background: rgba(255,255,255,0.04);
+            transition: 0.3s;
+        }
+
+        tbody tr:hover {
+            background: rgba(255,255,255,0.08);
+            transform: scale(1.01);
+        }
+
+        tbody td {
+            padding: 12px;
+        }
+
+        /* STATUS BADGE */
+        .badge {
+            padding: 4px 10px;
+            border-radius: 999px;
+            font-size: 12px;
+            font-weight: bold;
+        }
+
+        .pending { background: #facc15; color: black; }
+        .processing { background: #3b82f6; color: white; }
+        .done { background: #22c55e; color: black; }
+
+    </style>
+
+    <div class="py-10">
         <div class="max-w-7xl mx-auto sm:px-6 lg:px-8 space-y-6">
 
-            <!-- Notifikasi Sukses -->
+            <div class="glass p-6 text-center">
+                <h1 class="text-2xl font-bold mb-2">🎓 Sistem Aspirasi Digital</h1>
+                <p class="text-gray-400 text-sm">
+                    Sampaikan keluhan sarana & prasarana dengan cepat dan transparan
+                </p>
+            </div>
+
             @if (session('success'))
-                <div class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded relative">
-                    {{ session('success') }}
+                <div class="glass px-4 py-3 text-green-400 mb-4 text-center border-green-500/30">
+                    ✅ {{ session('success') }}
                 </div>
             @endif
 
-            <!-- Form Input Aspirasi -->
-            <div class="p-4 sm:p-8 bg-white shadow sm:rounded-lg">
-                <header>
-                    <h2 class="text-lg font-medium text-gray-900">Kirim Aspirasi Baru</h2>
-                    <p class="mt-1 text-sm text-gray-600">Laporkan masalah sarana dan prasarana di lingkungan sekolah.
-                    </p>
-                </header>
+            <div class="p-6 glass">
+                <h2 class="text-lg font-semibold mb-4">📝 Kirim Aspirasi Baru</h2>
 
-                <form method="post" action="{{ route('aspirasi.store') }}" class="mt-6 space-y-4">
+                <form method="post" action="{{ route('aspirasi.store') }}" class="space-y-4">
                     @csrf
-                    <div>
-                        <x-input-label for="category_id" value="Kategori Sarana" />
-                        <select id="category_id" name="category_id"
-                            class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
-                            @foreach ($categories as $cat)
-                                <option value="{{ $cat->id }}">{{ $cat->category_name }}</option>
-                            @endforeach
-                        </select>
-                    </div>
 
-                    <div>
-                        <x-input-label for="location" value="Lokasi Spesifik" />
-                        <x-text-input id="location" name="location" type="text" class="mt-1 block w-full"
-                            placeholder="Contoh: Lab Komputer 1, Kantin Atas" required />
-                    </div>
+                    <select name="category_id" class="w-full p-2 rounded-md outline-none">
+                        <option value="" disabled selected>-- Pilih Kategori --</option>
+                        @foreach ($categories as $cat)
+                            <option value="{{ $cat->id }}">{{ $cat->category_name }}</option>
+                        @endforeach
+                    </select>
 
-                    <div>
-                        <x-input-label for="description" value="Detail Pengaduan" />
-                        <textarea id="description" name="description" rows="4"
-                            class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
-                            placeholder="Jelaskan detail kerusakan atau keluhan Anda..." required></textarea>
-                    </div>
+                    <input type="text" name="location" placeholder="📍 Lokasi (Contoh: Lab Komputer 1)" class="w-full p-2 rounded-md">
 
-                    <div class="flex items-center gap-4">
-                        <x-primary-button>Kirim Laporan</x-primary-button>
-                    </div>
+                    <textarea name="description" rows="4" placeholder="🧾 Detail laporan..."
+                        class="w-full p-2 rounded-md"></textarea>
+
+                    <button type="submit" class="btn-kirim">Kirim Laporan</button>
                 </form>
             </div>
 
-            <!-- Tabel Riwayat Aspirasi -->
-            <div class="p-4 sm:p-8 bg-white shadow sm:rounded-lg">
-                <h2 class="text-lg font-medium text-gray-900 mb-4">Riwayat Aspirasi Saya</h2>
+            <div class="p-6 glass">
+                <h2 class="text-lg font-semibold mb-4">📊 Riwayat Aspirasi</h2>
+
                 <div class="overflow-x-auto">
-                    <table class="w-full text-sm text-left text-gray-500">
-                        <thead class="text-xs text-gray-700 uppercase bg-gray-50">
-                            <tr>
-                                <th class="px-6 py-3">Tanggal</th>
-                                <th class="px-6 py-3">Kategori</th>
-                                <th class="px-6 py-3">Lokasi</th>
-                                <th class="px-6 py-3">Status</th>
-                                <th class="px-6 py-3">Tanggapan Admin</th>
+                    <table class="w-full text-sm">
+                        <thead>
+                            <tr class="text-gray-400 text-left">
+                                <th class="px-4 py-2">Tanggal</th>
+                                <th class="px-4 py-2">Kategori</th>
+                                <th class="px-4 py-2">Lokasi</th>
+                                <th class="px-4 py-2">Status</th>
+                                <th class="px-4 py-2">Tanggapan</th>
                             </tr>
                         </thead>
+
                         <tbody>
                             @forelse($aspirasis as $row)
-                                <tr class="bg-white border-b">
-                                    <td class="px-6 py-4">{{ $row->created_at->format('d/m/Y') }}</td>
-                                    <td class="px-6 py-4 font-medium text-gray-900">{{ $row->category->category_name }}
-                                    </td>
-                                    <td class="px-6 py-4">{{ $row->location }}</td>
-                                    <td class="px-6 py-4">
-                                        <span
-                                            class="px-2 py-1 rounded text-xs font-bold
-                                        {{ $row->status == 'pending' ? 'bg-yellow-100 text-yellow-800' : '' }}
-                                        {{ $row->status == 'processing' ? 'bg-blue-100 text-blue-800' : '' }}
-                                        {{ $row->status == 'done' ? 'bg-green-100 text-green-800' : '' }}">
+                                <tr>
+                                    <td>{{ $row->created_at->format('d/m/Y') }}</td>
+                                    <td>{{ $row->category->category_name }}</td>
+                                    <td>{{ $row->location }}</td>
+
+                                    <td>
+                                        <span class="badge 
+                                            {{ $row->status == 'pending' ? 'pending' : '' }}
+                                            {{ $row->status == 'processing' ? 'processing' : '' }}
+                                            {{ $row->status == 'done' ? 'done' : '' }}">
                                             {{ strtoupper($row->status) }}
                                         </span>
                                     </td>
-                                    <td class="px-6 py-4 italic">
+
+                                    <td class="italic text-gray-400">
                                         {{ $row->feedback->content ?? 'Belum ada tanggapan' }}
                                     </td>
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="5" class="px-6 py-4 text-center">Belum ada laporan yang Anda kirim.
+                                    <td colspan="5" class="text-center py-10 text-gray-500">
+                                        <span class="text-3xl block mb-2">😢</span>
+                                        Belum ada laporan yang dikirim.
                                     </td>
                                 </tr>
                             @endforelse

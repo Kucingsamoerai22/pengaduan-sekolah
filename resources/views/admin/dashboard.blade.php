@@ -1,108 +1,141 @@
 <x-app-layout>
     <x-slot name="header">
-        <h2 class="font-semibold text-xl text-gray-800 leading-tight">
-            {{ __('Panel Kontrol Admin - Semua Aspirasi') }}
+        <h2 class="text-2xl font-bold text-white tracking-wide">
+            🛠️ Panel Kontrol Admin
         </h2>
     </x-slot>
 
-    <div class="py-12">
-        <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
+    <style>
+        body {
+            background: radial-gradient(circle at top, #0f172a, #000) !important;
+            color: white;
+        }
+
+        /* GLASS */
+        .glass {
+            background: rgba(255,255,255,0.05);
+            backdrop-filter: blur(18px);
+            border-radius: 18px;
+            border: 1px solid rgba(255,255,255,0.08);
+            box-shadow: 0 0 30px rgba(0,0,0,0.6);
+        }
+
+        /* INPUT, SELECT, TEXTAREA */
+        input, select, textarea {
+            background: #1e293b !important; 
+            border: 1px solid rgba(255,255,255,0.1);
+            color: white !important;
+        }
+
+        /* Perbaikan agar opsi dropdown tidak putih polos */
+        select option {
+            background: #1e293b;
+            color: white;
+        }
+
+        input::placeholder, textarea::placeholder {
+            color: #94a3b8;
+        }
+
+        input:focus, select:focus, textarea:focus {
+            outline: none;
+            border: 1px solid #3b82f6;
+            box-shadow: 0 0 8px #3b82f655;
+        }
+
+        /* BUTTON */
+        .btn {
+            background: linear-gradient(45deg, #3b82f6, #2563eb);
+            border-radius: 10px;
+            padding: 8px;
+            font-size: 12px;
+            font-weight: bold;
+            transition: 0.3s;
+            border: none;
+            cursor: pointer;
+        }
+
+        .btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 0 10px #3b82f688;
+        }
+
+        /* TABLE */
+        table { border-collapse: separate; border-spacing: 0 10px; }
+        thead { color: #9ca3af; }
+        tbody tr { background: rgba(255,255,255,0.04); transition: 0.3s; }
+        tbody tr:hover { background: rgba(255,255,255,0.08); }
+        td { padding: 12px; }
+
+        .badge { padding: 3px 8px; border-radius: 999px; font-size: 11px; font-weight: bold; }
+        .pending { background: #facc15; color: black; }
+        .processing { background: #3b82f6; color: white; }
+        .done { background: #22c55e; color: black; }
+    </style>
+
+    <div class="py-10">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-6">
 
             @if (session('success'))
-                <div class="mb-6 bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded relative">
-                    {{ session('success') }}
+                <div class="glass p-4 text-green-400 border border-green-500/30">
+                    ✅ {{ session('success') }}
                 </div>
             @endif
 
-            <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg p-6">
+            <div class="glass p-5">
+                <form action="{{ route('dashboard') }}" method="GET" class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                    <input type="text" name="search" value="{{ request('search') }}" placeholder="🔍 Cari nama / lokasi..." class="p-2 rounded outline-none">
+                    <select name="category_id" class="p-2 rounded outline-none">
+                        <option value="">Semua Kategori</option>
+                        @foreach ($categories as $cat)
+                            <option value="{{ $cat->id }}" {{ request('category_id') == $cat->id ? 'selected' : '' }}>{{ $cat->category_name }}</option>
+                        @endforeach
+                    </select>
+                    <select name="status" class="p-2 rounded outline-none">
+                        <option value="">Semua Status</option>
+                        <option value="pending" {{ request('status') == 'pending' ? 'selected' : '' }}>Pending</option>
+                        <option value="processing" {{ request('status') == 'processing' ? 'selected' : '' }}>Processing</option>
+                        <option value="done" {{ request('status') == 'done' ? 'selected' : '' }}>Done</option>
+                    </select>
+                    <button type="submit" class="btn text-white">Filter</button>
+                </form>
+            </div>
 
-                <!-- Form Filter & Pencarian -->
-                <div class="mb-6 bg-gray-50 p-4 rounded-lg border">
-                    <form action="{{ route('dashboard') }}" method="GET" class="grid grid-cols-1 md:grid-cols-4 gap-4">
-                        <div>
-                            <label class="block text-xs font-bold text-gray-700 uppercase mb-1">Cari
-                                Pelapor/Lokasi</label>
-                            <input type="text" name="search" value="{{ request('search') }}"
-                                placeholder="Ketik nama..." class="w-full text-sm rounded border-gray-300">
-                        </div>
-                        <div>
-                            <label class="block text-xs font-bold text-gray-700 uppercase mb-1">Kategori</label>
-                            <select name="category_id" class="w-full text-sm rounded border-gray-300">
-                                <option value="">Semua Kategori</option>
-                                @foreach ($categories as $cat)
-                                    <option value="{{ $cat->id }}"
-                                        {{ request('category_id') == $cat->id ? 'selected' : '' }}>
-                                        {{ $cat->category_name }}</option>
-                                @endforeach
-                            </select>
-                        </div>
-                        <div>
-                            <label class="block text-xs font-bold text-gray-700 uppercase mb-1">Status</label>
-                            <select name="status" class="w-full text-sm rounded border-gray-300">
-                                <option value="">Semua Status</option>
-                                <option value="pending" {{ request('status') == 'pending' ? 'selected' : '' }}>Pending
-                                </option>
-                                <option value="processing" {{ request('status') == 'processing' ? 'selected' : '' }}>
-                                    Processing</option>
-                                <option value="done" {{ request('status') == 'done' ? 'selected' : '' }}>Done</option>
-                            </select>
-                        </div>
-                        <div class="flex items-end">
-                            <button type="submit"
-                                class="bg-gray-800 text-white px-4 py-2 rounded text-sm hover:bg-black transition w-full">
-                                Filter Data
-                            </button>
-                        </div>
-                    </form>
-                </div>
-
-                <!-- Tabel Aspirasi -->
-                <table class="w-full text-sm text-left border-collapse">
-                    <thead class="bg-gray-50 uppercase text-xs font-bold">
-                        <tr>
-                            <th class="p-4 border-b">Pelapor</th>
-                            <th class="p-4 border-b">Kategori & Lokasi</th>
-                            <th class="p-4 border-b">Aspirasi</th>
-                            <th class="p-4 border-b">Tindakan Admin</th>
+            <div class="glass p-6 overflow-x-auto">
+                <table class="w-full text-sm">
+                    <thead>
+                        <tr class="text-left text-gray-400">
+                            <th class="px-4">Pelapor</th>
+                            <th class="px-4">Kategori & Lokasi</th>
+                            <th class="px-4">Aspirasi</th>
+                            <th class="px-4">Action</th>
                         </tr>
                     </thead>
                     <tbody>
                         @foreach ($aspirasis as $row)
-                            <tr class="border-b hover:bg-gray-50">
-                                <td class="p-4">
-                                    <div class="font-bold text-gray-900">{{ $row->user->name }}</div>
-                                    <div class="text-xs text-gray-500">NIS: {{ $row->user->username }}</div>
-                                    <div class="text-xs text-gray-400">{{ $row->created_at->diffForHumans() }}</div>
+                            <tr>
+                                <td class="px-4">
+                                    <div class="font-bold">{{ $row->user->name }}</div>
+                                    <div class="text-xs text-gray-400">NIS: {{ $row->user->username }}</div>
+                                    <div class="text-xs text-gray-500">{{ $row->created_at->diffForHumans() }}</div>
                                 </td>
-                                <td class="p-4">
-                                    <span
-                                        class="block font-medium text-blue-600">{{ $row->category->category_name }}</span>
-                                    <span class="text-gray-600 italic text-xs">{{ $row->location }}</span>
+                                <td class="px-4">
+                                    <div class="text-blue-400 font-semibold">{{ $row->category->category_name }}</div>
+                                    <div class="text-xs text-gray-400 italic">{{ $row->location }}</div>
                                 </td>
-                                <td class="p-4 text-gray-700">
-                                    {{ $row->description }}
-                                </td>
-                                <td class="p-4">
-                                    <form action="{{ route('aspirasi.update', $row->id) }}" method="POST"
-                                        class="space-y-2">
+                                <td class="px-4 text-gray-300">{{ $row->description }}</td>
+                                <td class="px-4 min-w-[200px]">
+                                    <form action="{{ route('aspirasi.update', $row->id) }}" method="POST" class="space-y-2">
                                         @csrf
-                                        <select name="status" class="w-full text-xs rounded border-gray-300">
-                                            <option value="pending" {{ $row->status == 'pending' ? 'selected' : '' }}>
-                                                PENDING</option>
-                                            <option value="processing"
-                                                {{ $row->status == 'processing' ? 'selected' : '' }}>PROCESSING
-                                            </option>
-                                            <option value="done" {{ $row->status == 'done' ? 'selected' : '' }}>DONE
-                                            </option>
+                                        {{-- Hapus @method('PATCH') jika route di web.php pakai Route::post --}}
+                                        
+                                        <select name="status" class="w-full text-xs p-2 rounded outline-none">
+                                            <option value="pending" {{ $row->status == 'pending' ? 'selected' : '' }}>PENDING</option>
+                                            <option value="processing" {{ $row->status == 'processing' ? 'selected' : '' }}>PROCESSING</option>
+                                            <option value="done" {{ $row->status == 'done' ? 'selected' : '' }}>DONE</option>
                                         </select>
-
-                                        <textarea name="feedback" rows="2" class="w-full text-xs rounded border-gray-300" placeholder="Tulis tanggapan..."
-                                            required>{{ $row->feedback->content ?? '' }}</textarea>
-
-                                        <button type="submit"
-                                            class="w-full bg-indigo-600 text-white text-xs py-2 rounded hover:bg-indigo-700 transition">
-                                            Simpan Perubahan
-                                        </button>
+                                        <textarea name="feedback" rows="2" class="w-full text-xs p-2 rounded outline-none" placeholder="✍️ Tanggapan..." required>{{ $row->feedback->content ?? '' }}</textarea>
+                                        <button type="submit" class="btn text-white w-full">Simpan</button>
                                     </form>
                                 </td>
                             </tr>
